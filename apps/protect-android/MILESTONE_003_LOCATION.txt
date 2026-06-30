@@ -1,0 +1,4 @@
+﻿Auralis Protect Milestone 003
+Created: 2026-06-29 16:18:04
+Feature: Location permission request and last-known latitude/longitude display.
+Expected: Location card appears and permission can be requested from inside app.

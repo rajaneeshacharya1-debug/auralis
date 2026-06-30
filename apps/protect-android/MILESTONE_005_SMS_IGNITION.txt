@@ -1,0 +1,6 @@
+﻿Auralis Protect Milestone 005
+Created: 2026-06-29 16:34:17
+Feature: SMS ignition receiver.
+Boot command: #AURALIS-BOOT-4729
+Stop command: #AURALIS-STOP-4729
+Expected: Sending boot SMS starts recovery service if permissions are granted.

@@ -1,0 +1,1 @@
+﻿This folder will contain project maintenance scripts. Scripts should never delete or move files without a backup and confirmation.

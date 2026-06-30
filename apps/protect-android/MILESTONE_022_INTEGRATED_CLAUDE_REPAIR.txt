@@ -1,0 +1,12 @@
+Auralis Milestone 022 - Integrated Claude Redesign Repair
+========================================================
+
+This repair combines:
+- the uploaded full Auralis Protect project state,
+- Claude's milestone 020 tabbed dashboard redesign,
+- Claude's milestone 021 button contrast cleanup,
+- the missing runtime stores and compile fixes needed by the current project,
+- snapshot/report helper restoration for MainActivity and the local server,
+- recovery/ring state persistence glue.
+
+No new command channel is introduced.

@@ -1,0 +1,6 @@
+﻿Auralis Protect Milestone 016
+Created: 2026-06-29 19:05:16
+Feature: Live Controller Beacon card and self-refreshing /live?token=... local command center.
+Fix: ring state is now stored so dashboard Stop Ring becomes available after local/SMS/manual ring commands.
+Included: Hotfix 015A string compile fixes and 1-second dashboard refresh.
+Backup folder: E:\auralis\_setup_logs\milestone_016_live_beacon_backup_2026-06-29_19-05-15

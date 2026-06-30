@@ -1,0 +1,4 @@
+﻿Auralis Protect Milestone 011
+Created: 2026-06-29 17:59:30
+Feature: Remove Trusted Sender button and local false-reject log cleanup.
+Default local test IP: 192.168.1.107

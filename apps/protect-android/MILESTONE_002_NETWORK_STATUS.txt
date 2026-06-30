@@ -1,0 +1,4 @@
+﻿Auralis Protect Milestone 002
+Created: 2026-06-29 16:14:36
+Feature: Real network status tile.
+Expected: Network tile should show Wi-Fi, Mobile, Ethernet, VPN, Connected, or Offline.

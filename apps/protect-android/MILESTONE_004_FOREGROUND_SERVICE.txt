@@ -1,0 +1,4 @@
+﻿Auralis Protect Milestone 004
+Created: 2026-06-29 16:22:16
+Feature: Foreground recovery service with live location updates.
+Expected: Start Recovery shows notification and starts location listening.

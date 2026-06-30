@@ -1,0 +1,5 @@
+﻿Auralis Protect Milestone 015
+Created: 2026-06-29 18:51:32
+Feature: Recovery Snapshot card, local /snapshot endpoint, SMS STATUS and SNAPSHOT replies.
+Location fix: Recovery service now publishes immediate updates and a 5-second heartbeat so the dashboard does not keep increasing stale last-update age while recovery is active.
+UI: Milestone 014 controller link and Stop Ring button visibility fixes are preserved.

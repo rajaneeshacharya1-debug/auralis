@@ -1,0 +1,7 @@
+﻿Auralis Protect Milestone 017
+Created: 2026-06-29 19:17:09
+Feature: Evidence Timeline Report card, share sheet, local /report route, and trusted SMS report command.
+SMS command: #AURALIS-REPORT-4729
+Local URL: /report?token=<current-token>
+Included: Milestone 016 Live Controller Beacon files and ring-state sync.
+Backup folder: E:\auralis\_setup_logs\milestone_017_evidence_report_backup_2026-06-29_19-17-07

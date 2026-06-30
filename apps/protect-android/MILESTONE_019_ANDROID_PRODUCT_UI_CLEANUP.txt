@@ -1,0 +1,8 @@
+﻿Auralis Protect Milestone 019
+Created: 2026-06-29 20:23:14
+Milestone: Android Product UI Cleanup
+Command capability added: none
+Changed files: 21
+UI grouping: Header/Recovery State, Device Status, Primary Recovery Controls, Local Control/Nearby Fallback, Emergency SMS Ignition, Activity Timeline, Advanced Tools/Diagnostics.
+Design: stronger shared button styles, clearer disabled states, cleaner card hierarchy, compact event timeline.
+Product direction: SMS is emergency ignition only. Local Wi-Fi/hotspot is fallback control. Online/cloud dashboard remains future work.

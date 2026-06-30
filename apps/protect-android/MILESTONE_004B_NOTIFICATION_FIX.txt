@@ -1,0 +1,4 @@
+﻿Auralis Protect Milestone 004B
+Created: 2026-06-29 16:29:06
+Feature: Runtime notification permission and foreground service feedback.
+Expected: Start Recovery asks for notification permission if needed and shows toast feedback.

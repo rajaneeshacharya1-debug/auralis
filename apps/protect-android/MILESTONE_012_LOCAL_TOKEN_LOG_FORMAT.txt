@@ -1,0 +1,5 @@
+﻿Auralis Protect Milestone 012
+Created: 2026-06-29 18:06:29
+Feature: Editable local Wi-Fi command token and event log formatting fix.
+Default local test IP: 192.168.1.107
+Default token: auralis-local-4729

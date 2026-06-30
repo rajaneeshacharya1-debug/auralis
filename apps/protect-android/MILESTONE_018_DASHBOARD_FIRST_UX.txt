@@ -1,0 +1,7 @@
+﻿Auralis Protect Milestone 018
+Created: 2026-06-29 19:36:25
+Feature: Dashboard-first UX realignment and full button redesign.
+Direction: Online/dashboard tracking is primary. SMS ignition remains an emergency wake-up path.
+UI order: Recovery Control, Live Tracking, Controller Dashboard, Emergency SMS Ignition, Evidence & Diagnostics.
+Button system: AuralisActionButton with primary, secondary, success, warning, danger, and neutral styles.
+Included carry-forward fixes: location refresh, live beacon, evidence report, ring state sync.

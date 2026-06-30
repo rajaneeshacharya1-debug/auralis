@@ -1,0 +1,5 @@
+﻿Auralis Protect Milestone 014
+Created: 2026-06-29 18:36:39
+Feature: Trusted Controller Link share card for local Wi-Fi / hotspot command handoff.
+UI fix: Stop Ring now has a visible filled danger button, and the local URL list includes /ring-stop.
+Theme fix: Material3 dark color scheme is applied in MainActivity for readable buttons.

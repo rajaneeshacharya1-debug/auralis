@@ -1,0 +1,6 @@
+﻿Auralis Protect Milestone 008
+Created: 2026-06-29 17:18:40
+Feature: Local Wi-Fi/hotspot command server and trusted-number input visibility fix.
+Port: 4729
+Token: auralis-local-4729
+Endpoints: /ping, /boot?token=auralis-local-4729, /stop?token=auralis-local-4729

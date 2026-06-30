@@ -1,0 +1,5 @@
+﻿Auralis Protect Milestone 007
+Created: 2026-06-29 17:05:47
+Feature: Trusted sender protection and dual-SIM reply routing.
+Important: Set the trusted controller number inside the app before testing SMS commands.
+Commands from unknown senders are ignored and do not start recovery.

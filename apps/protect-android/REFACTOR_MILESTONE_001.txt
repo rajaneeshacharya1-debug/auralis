@@ -1,0 +1,4 @@
+﻿Auralis Protect Refactor Milestone 001
+Created: 2026-06-29 16:11:48
+Result: Milestone 1 dashboard split into professional Kotlin files.
+Expected behavior: same UI, same battery reading, same ring/stop ring functionality.

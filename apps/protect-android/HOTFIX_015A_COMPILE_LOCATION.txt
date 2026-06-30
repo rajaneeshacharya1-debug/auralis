@@ -1,0 +1,5 @@
+﻿Auralis Protect Hotfix 015A
+Created: 2026-06-29 18:55:44
+Fix: corrected Kotlin newline string literals in MainActivity, SmsCommandReceiver, and CommandEngine.
+Location UI refresh: dashboard polling changed from 3 seconds to 1 second.
+Backup folder: E:\auralis\_setup_logs\hotfix_015a_compile_location_backup_2026-06-29_18-55-42

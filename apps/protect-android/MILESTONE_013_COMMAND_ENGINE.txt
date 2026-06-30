@@ -1,0 +1,4 @@
+﻿Auralis Protect Milestone 013
+Created: 2026-06-29 18:13:13
+Feature: Unified command engine for MANUAL, SMS, LOCAL, and SYSTEM commands.
+Default local test IP: 192.168.1.107

@@ -1,0 +1,10 @@
+﻿Auralis Protect Milestone 009
+Created: 2026-06-29 17:36:02
+Feature: Browser control panel for local Wi-Fi/hotspot commands.
+Panel: http://192.168.1.107:4729
+Ping: http://192.168.1.107:4729/ping
+Status: http://192.168.1.107:4729/status?token=auralis-local-4729
+Boot: http://192.168.1.107:4729/boot?token=auralis-local-4729
+Stop: http://192.168.1.107:4729/stop?token=auralis-local-4729
+Ring: http://192.168.1.107:4729/ring?token=auralis-local-4729
+Stop Ring: http://192.168.1.107:4729/ring-stop?token=auralis-local-4729

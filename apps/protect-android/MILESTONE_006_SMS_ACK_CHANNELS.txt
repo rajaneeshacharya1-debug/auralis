@@ -1,0 +1,12 @@
+﻿Auralis Protect Milestone 006
+Created: 2026-06-29 16:46:37
+Feature: SMS acknowledgement replies and future command channel architecture.
+Boot command: #AURALIS-BOOT-4729
+Stop command: #AURALIS-STOP-4729
+Future command channels: SMS, Wi-Fi local, Bluetooth nearby, Hotspot direct.
+Auralis Protect Milestone 006
+Created: 2026-06-29 17:03:56
+Feature: SMS acknowledgement replies and future command channel architecture.
+Boot command: #AURALIS-BOOT-4729
+Stop command: #AURALIS-STOP-4729
+Future command channels: SMS, Wi-Fi local, Bluetooth nearby, Hotspot direct.

@@ -1,0 +1,131 @@
+﻿# Android / Gradle
+.gradle/
+build/
+*/build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Android Studio
+.idea/
+*.iml
+
+# Kotlin
+*.class
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node / web / desktop future
+node_modules/
+dist/
+.next/
+out/
+
+# Secrets
+.env
+.env.*
+*.keystore
+*.jks
+secrets.properties
+
+# Auralis local runtime data
+_runtime/
+_private/
+
+# =========================
+# Auralis / Android / Gradle
+# =========================
+
+# Gradle / Android build outputs
+.gradle/
+build/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+out/
+
+# Android Studio / IntelliJ local files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Local machine config
+local.properties
+*.local
+.env
+.env.*
+!.env.example
+
+# Signing keys / certificates / secrets
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+*.cer
+*.crt
+keystore.properties
+signing.properties
+
+# Generated APK/AAB outputs
+*.apk
+*.aab
+*.ap_
+*.idsig
+
+# Kotlin / Java / JVM
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Node / web dashboard future modules
+node_modules/
+dist/
+.vite/
+.next/
+.nuxt/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python/cache/tooling
+__pycache__/
+*.pyc
+.cache/
+
+# Auralis generated local backups/logs
+_setup_logs/
+auralis_setup_logs/
+*_backup_*/
+RESTORE_TO_019B*/
+DEEP_RESTORE_TO_019B*/
+
+# Keep source files, Gradle wrapper, and project metadata tracked.
+# Do NOT ignore:
+# gradlew
+# gradlew.bat
+# gradle/wrapper/gradle-wrapper.jar
+# gradle/wrapper/gradle-wrapper.properties

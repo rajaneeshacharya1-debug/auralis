@@ -1,0 +1,4 @@
+﻿Auralis Protect Hotfix 013A
+Created: 2026-06-29 18:22:18
+Fix: MainActivity.kt now forces a Material3 dark color scheme so disabled buttons remain visible on the dark dashboard.
+Affected visible controls: Reset, Start Panel, Stop Panel, Check, Remove Trusted Sender, and other disabled Material3 buttons.
