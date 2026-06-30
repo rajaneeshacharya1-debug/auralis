@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.auralis.protect.data.settings.TrustedSenderStore
 import com.auralis.protect.data.sms.SmsCommandStatus
 import com.auralis.protect.data.sms.SmsCommandStore
 import com.auralis.protect.design.components.AuralisActionButton
@@ -27,19 +28,21 @@ fun EmergencySmsPanel(
     smsCommandStatus: SmsCommandStatus,
     onRequestSmsPermissions: () -> Unit
 ) {
-    val trustedConfigured = trustedSender.trim().isNotBlank()
+    val trustedConfigured = TrustedSenderStore.normalize(trustedSender).length >= 8
     val permissionsReady = receivePermissionGranted && sendPermissionGranted
     val ready = permissionsReady && trustedConfigured
+    val maskedTrustedSender = TrustedSenderStore.mask(trustedSender)
 
     val stateText = when {
-        ready -> "Armed"
+        ready -> "Emergency armed"
+        receivePermissionGranted && trustedConfigured -> "Can receive, replies blocked"
+        trustedConfigured -> "SMS permission needed"
         !trustedConfigured -> "Trusted sender needed"
-        permissionsReady -> "Permission ready"
-        else -> "Permission needed"
+        else -> "Setup needed"
     }
 
     AuralisCard {
-        BigTitle("Emergency SMS")
+        BigTitle("Emergency SMS ignition")
         Text(
             text = stateText,
             color = if (ready) AuralisColors.Success else AuralisColors.Warning,
@@ -47,7 +50,31 @@ fun EmergencySmsPanel(
             fontWeight = FontWeight.Bold,
             lineHeight = 18.sp
         )
-        BodyText("Use only when normal or local control can't reach this phone.")
+        BodyText("Backup ignition channel for when the protected phone cannot be reached through the app or local Wi-Fi/hotspot panel.")
+
+        TwoColumnRow(
+            first = {
+                MetricTile(
+                    title = "SMS permission",
+                    value = when {
+                        permissionsReady -> "Receive + reply"
+                        receivePermissionGranted -> "Receive only"
+                        sendPermissionGranted -> "Reply only"
+                        else -> "Not granted"
+                    },
+                    subtitle = "Depends on Android SMS permissions",
+                    valueColor = if (permissionsReady) AuralisColors.Success else AuralisColors.Warning
+                )
+            },
+            second = {
+                MetricTile(
+                    title = "Trusted sender",
+                    value = if (trustedConfigured) maskedTrustedSender else "Not saved",
+                    subtitle = if (trustedConfigured) "Only this controller is accepted" else "Required before arming",
+                    valueColor = if (trustedConfigured) AuralisColors.Success else AuralisColors.Warning
+                )
+            }
+        )
 
         AuralisInputField(
             label = "Trusted controller number",
@@ -86,11 +113,16 @@ fun EmergencySmsPanel(
 
         SoftPanel {
             SectionLabel("Emergency commands")
+            BodyText("Send exactly one of these from the trusted sender. BOOT starts recovery. STOP stops recovery.")
             Text(
                 text = SmsCommandStore.BOOT_COMMAND,
                 color = AuralisColors.TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold
+            )
+            MicroText(
+                text = "Starts recovery mode from SMS.",
+                color = AuralisColors.TextMuted
             )
             Text(
                 text = SmsCommandStore.STOP_COMMAND,
@@ -99,9 +131,26 @@ fun EmergencySmsPanel(
                 fontWeight = FontWeight.SemiBold
             )
             MicroText(
-                text = "Last: ${smsCommandStatus.lastCommand} \u00b7 ${SmsCommandStore.ageText(smsCommandStatus)}",
+                text = "Stops recovery mode from SMS.",
+                color = AuralisColors.TextMuted
+            )
+        }
+
+        SoftPanel {
+            SectionLabel("Emergency readiness")
+            StateChip(
+                text = if (ready) "Ready" else "Not ready",
+                color = if (ready) AuralisColors.Success else AuralisColors.Warning
+            )
+            MicroText(
+                text = "Last SMS event: ${smsCommandStatus.lastCommand} - ${SmsCommandStore.ageText(smsCommandStatus)}",
                 color = AuralisColors.CyanSoft
             )
+            MicroText(
+                text = smsCommandStatus.lastDetail,
+                color = AuralisColors.TextMuted
+            )
+            BodyText("Delivery and replies can still depend on SIM state, mobile network reachability, carrier rules, and OEM battery restrictions.")
         }
     }
 }

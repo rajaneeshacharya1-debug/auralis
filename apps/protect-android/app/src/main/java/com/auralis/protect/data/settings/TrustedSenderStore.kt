@@ -51,4 +51,14 @@ object TrustedSenderStore {
     fun normalize(number: String): String {
         return number.filter { it.isDigit() }
     }
+
+    fun mask(number: String?): String {
+        val digits = normalize(number.orEmpty())
+        if (digits.isBlank()) return "unknown"
+
+        return when {
+            digits.length <= 4 -> "****"
+            else -> "**** ${digits.takeLast(4)}"
+        }
+    }
 }

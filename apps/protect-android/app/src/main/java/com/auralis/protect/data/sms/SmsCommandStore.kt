@@ -16,9 +16,6 @@ object SmsCommandStore {
 
     const val BOOT_COMMAND = "#AURALIS-BOOT-4729"
     const val STOP_COMMAND = "#AURALIS-STOP-4729"
-    const val STATUS_COMMAND = "#AURALIS-STATUS-4729"
-    const val SNAPSHOT_COMMAND = "#AURALIS-SNAPSHOT-4729"
-    const val REPORT_COMMAND = "#AURALIS-REPORT-4729"
 
     fun saveCommand(
         context: Context,

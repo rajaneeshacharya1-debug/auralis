@@ -28,14 +28,11 @@ class SmsCommandReceiver : BroadcastReceiver() {
         val command = when {
             body.contains(SmsCommandStore.BOOT_COMMAND, ignoreCase = false) -> AuralisCommand.BOOT
             body.contains(SmsCommandStore.STOP_COMMAND, ignoreCase = false) -> AuralisCommand.STOP
-            body.contains(SmsCommandStore.STATUS_COMMAND, ignoreCase = false) -> AuralisCommand.STATUS
-            body.contains(SmsCommandStore.SNAPSHOT_COMMAND, ignoreCase = false) -> AuralisCommand.SNAPSHOT
-            body.contains(SmsCommandStore.REPORT_COMMAND, ignoreCase = false) -> AuralisCommand.REPORT
             else -> return
         }
 
         if (!TrustedSenderStore.isSenderTrusted(context, sender)) {
-            val detail = "Command ignored because sender is not the trusted controller. Sender: ${sender ?: "unknown"}"
+            val detail = "Ignored: sender ${TrustedSenderStore.mask(sender)} is not the trusted controller."
 
             SmsCommandStore.saveCommand(
                 context = context,
@@ -67,7 +64,7 @@ class SmsCommandReceiver : BroadcastReceiver() {
         )
 
         val detail = buildString {
-            append(result.detail)
+            append("${result.command.label} from trusted SMS sender ${TrustedSenderStore.mask(sender)}.")
             append(" ")
             append(if (replySent) "Reply sent." else "Reply not sent. SEND_SMS permission or SIM route may be unavailable.")
         }

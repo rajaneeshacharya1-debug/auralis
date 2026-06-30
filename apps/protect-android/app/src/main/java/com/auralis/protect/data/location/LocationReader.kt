@@ -19,7 +19,7 @@ enum class LocationFreshness {
     Unavailable
 }
 
-// Snapshot shown in the app, sent over SMS, and returned by the local controller.
+// Snapshot shown in the app and returned by the local controller.
 data class LocationSnapshot(
     val value: String,
     val detail: String,
