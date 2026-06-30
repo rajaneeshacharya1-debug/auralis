@@ -213,7 +213,7 @@ class LocalControlForegroundService : Service() {
             return LocalHttpResponse(
                 statusCode = 200,
                 statusText = "OK",
-                body = buildControlPanelHtml(),
+                body = buildControlPanelHtml(token),
                 contentType = "text/html; charset=utf-8"
             )
         }
@@ -499,10 +499,16 @@ class LocalControlForegroundService : Service() {
     }
 
 
-    private fun buildControlPanelHtml(): String {
+    private fun buildControlPanelHtml(initialToken: String): String {
         val ip = DeviceAddressReader.primaryAddress()
-        val status = CommandEngine.statusText(applicationContext)
-        val token = LocalControlStore.readToken(applicationContext)
+        val currentToken = LocalControlStore.readToken(applicationContext)
+        val initialStatus = if (initialToken == currentToken) {
+            CommandEngine.statusText(applicationContext)
+        } else {
+            "Enter the local control token, then press Refresh Status."
+        }
+        val status = htmlEscape(initialStatus)
+        val tokenSeed = htmlEscape(initialToken)
 
         return """
             <!doctype html>
@@ -547,29 +553,96 @@ class LocalControlForegroundService : Service() {
                         grid-template-columns: 1fr 1fr;
                         gap: 12px;
                     }
-                    a.btn {
+                    .tokenRow {
+                        display: grid;
+                        grid-template-columns: 1fr auto;
+                        gap: 12px;
+                        align-items: end;
+                        margin-top: 12px;
+                    }
+                    label {
                         display: block;
+                        color: #8FA6B2;
+                        font-size: 13px;
+                        font-weight: 800;
+                        margin-bottom: 8px;
+                    }
+                    input {
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 15px;
+                        border-radius: 16px;
+                        border: 1px solid rgba(158, 245, 255, 0.25);
+                        background: #121D25;
+                        color: #FFF7E8;
+                        font-size: 16px;
+                    }
+                    input:focus {
+                        outline: none;
+                        border-color: #69E7F2;
+                        box-shadow: 0 0 0 3px rgba(105, 231, 242, 0.12);
+                    }
+                    button, a.btn {
+                        display: block;
+                        border: 0;
+                        cursor: pointer;
+                        min-height: 52px;
                         text-decoration: none;
                         text-align: center;
                         padding: 16px;
                         border-radius: 16px;
+                        font: inherit;
                         font-weight: 800;
                         color: #020406;
                         background: #69E7F2;
                     }
-                    a.warn {
+                    button:disabled {
+                        cursor: wait;
+                        filter: grayscale(0.4) brightness(0.75);
+                    }
+                    .warn {
                         background: #FFD166;
                     }
-                    a.danger {
+                    .danger {
                         background: #FF8A80;
                     }
-                    a.dark {
+                    .success {
+                        background: #74F2A6;
+                    }
+                    .dark {
                         color: #FFF7E8;
                         background: #121D25;
                         border: 1px solid rgba(158, 245, 255, 0.25);
                     }
-                    a.wide {
+                    .wide {
                         grid-column: 1 / -1;
+                    }
+                    .outputHead {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 12px;
+                        margin-bottom: 10px;
+                    }
+                    .state {
+                        border-radius: 999px;
+                        padding: 8px 11px;
+                        background: rgba(143, 166, 178, 0.12);
+                        color: #8FA6B2;
+                        font-size: 12px;
+                        font-weight: 900;
+                    }
+                    .state.loading {
+                        background: rgba(255, 209, 102, 0.12);
+                        color: #FFD166;
+                    }
+                    .state.success {
+                        background: rgba(116, 242, 166, 0.12);
+                        color: #74F2A6;
+                    }
+                    .state.error {
+                        background: rgba(255, 138, 128, 0.12);
+                        color: #FF8A80;
                     }
                     pre {
                         white-space: pre-wrap;
@@ -583,34 +656,138 @@ class LocalControlForegroundService : Service() {
                         font-size: 13px;
                         color: #8FA6B2;
                     }
+                    @media (max-width: 560px) {
+                        .grid,
+                        .tokenRow {
+                            grid-template-columns: 1fr;
+                        }
+                        .wide {
+                            grid-column: auto;
+                        }
+                    }
                 </style>
             </head>
             <body>
                 <div class="wrap">
-                    <div class="brand">AURALIS LOCAL</div>
-                    <h1>Protect Control Panel</h1>
-                    <p>Local Wi-Fi / hotspot command panel for live recovery actions.</p>
+                    <div class="brand">AURALIS PROTECT LOCAL</div>
+                    <h1>Protected Device Dashboard</h1>
+                    <p>Local Wi-Fi / hotspot dashboard for trusted recovery actions. Commands run in place and report back below.</p>
 
                     <div class="card">
+                        <h2>Access Token</h2>
+                        <div class="tokenRow">
+                            <div>
+                                <label for="token">Local control token</label>
+                                <input id="token" type="password" value="$tokenSeed" autocomplete="off" placeholder="Enter token from Auralis Protect" />
+                            </div>
+                            <button class="dark" type="button" id="rememberToken">Remember</button>
+                        </div>
+                        <p class="small">Protected routes still require the editable local token. This page does not reveal the saved token by itself.</p>
+                    </div>
+
+                    <div class="card">
+                        <h2>Controls</h2>
                         <div class="grid">
-                            <a class="btn" href="/boot?token=$token">Start Recovery</a>
-                            <a class="btn danger" href="/stop?token=$token">Stop Recovery</a>
-                            <a class="btn warn" href="/ring?token=$token">Ring Phone</a>
-                            <a class="btn danger" href="/ring-stop?token=$token">Stop Ring</a>
-                            <a class="btn dark" href="/status?token=$token">Status Text</a>
-                            <a class="btn dark" href="/ping">Ping</a>
-                            <a class="btn wide" href="/live?token=$token">Live Local Command Center</a>
-                            <a class="btn wide" href="/snapshot?token=$token">Recovery Snapshot + Maps</a>
-                            <a class="btn wide dark" href="/report?token=$token">Evidence Timeline Report</a>
+                            <button type="button" data-route="/boot">Start Recovery</button>
+                            <button class="danger" type="button" data-route="/stop">Stop Recovery</button>
+                            <button class="warn" type="button" data-route="/ring">Ring Phone</button>
+                            <button class="danger" type="button" data-route="/ring-stop">Stop Ring</button>
+                            <button class="dark" type="button" data-route="/status">Refresh Status</button>
+                            <button class="dark" type="button" data-route="/ping" data-public="true">Ping Panel</button>
+                            <button class="wide success" type="button" id="openLive">Open Live Local View</button>
+                            <button class="wide dark" type="button" data-route="/snapshot">Recovery Snapshot + Maps</button>
+                            <button class="wide dark" type="button" data-route="/report">Evidence Timeline Report</button>
                         </div>
                     </div>
 
                     <div class="card">
-                        <h2>Status</h2>
-                        <pre>$status</pre>
+                        <div class="outputHead">
+                            <h2>Output</h2>
+                            <span id="state" class="state">Ready</span>
+                        </div>
+                        <pre id="output">$status</pre>
                         <p class="small">Panel URL: http://$ip:${LocalControlStore.PORT}</p>
                     </div>
                 </div>
+                <script>
+                    const tokenInput = document.getElementById('token');
+                    const output = document.getElementById('output');
+                    const state = document.getElementById('state');
+                    const buttons = Array.from(document.querySelectorAll('button[data-route]'));
+                    const remembered = localStorage.getItem('auralisLocalToken') || '';
+                    const urlToken = new URLSearchParams(window.location.search).get('token') || '';
+
+                    if (!tokenInput.value && urlToken) {
+                        tokenInput.value = urlToken;
+                    } else if (!tokenInput.value && remembered) {
+                        tokenInput.value = remembered;
+                    }
+
+                    function setState(kind, text) {
+                        state.className = 'state ' + kind;
+                        state.textContent = text;
+                    }
+
+                    function setBusy(busy) {
+                        buttons.forEach((button) => button.disabled = busy);
+                    }
+
+                    function protectedUrl(route) {
+                        const token = tokenInput.value.trim();
+                        if (!token) {
+                            throw new Error('Enter the local control token first.');
+                        }
+                        localStorage.setItem('auralisLocalToken', token);
+                        return route + '?token=' + encodeURIComponent(token);
+                    }
+
+                    async function requestRoute(route, isPublic) {
+                        try {
+                            setBusy(true);
+                            setState('loading', 'Loading');
+                            output.textContent = 'Contacting protected device...';
+
+                            const target = isPublic ? route : protectedUrl(route);
+                            const response = await fetch(target, { cache: 'no-store' });
+                            const text = await response.text();
+
+                            output.textContent = text || response.status + ' ' + response.statusText;
+                            setState(response.ok ? 'success' : 'error', response.ok ? 'Success' : 'Error');
+                        } catch (error) {
+                            output.textContent = error.message || 'Request failed';
+                            setState('error', 'Error');
+                        } finally {
+                            setBusy(false);
+                        }
+                    }
+
+                    buttons.forEach((button) => {
+                        button.addEventListener('click', () => {
+                            requestRoute(button.dataset.route, button.dataset.public === 'true');
+                        });
+                    });
+
+                    document.getElementById('rememberToken').addEventListener('click', () => {
+                        const token = tokenInput.value.trim();
+                        if (token) {
+                            localStorage.setItem('auralisLocalToken', token);
+                            setState('success', 'Saved');
+                            output.textContent = 'Local token saved in this browser.';
+                        } else {
+                            setState('error', 'Missing token');
+                            output.textContent = 'Enter a token before saving.';
+                        }
+                    });
+
+                    document.getElementById('openLive').addEventListener('click', () => {
+                        try {
+                            window.location.href = protectedUrl('/live');
+                        } catch (error) {
+                            output.textContent = error.message || 'Token required';
+                            setState('error', 'Error');
+                        }
+                    });
+                </script>
             </body>
             </html>
         """.trimIndent()
@@ -641,6 +818,8 @@ class LocalControlForegroundService : Service() {
             .replace("&", "&amp;")
             .replace("<", "&lt;")
             .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;")
     }
 
 

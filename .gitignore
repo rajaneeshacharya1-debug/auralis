@@ -129,3 +129,6 @@ DEEP_RESTORE_TO_019B*/
 # gradlew.bat
 # gradle/wrapper/gradle-wrapper.jar
 # gradle/wrapper/gradle-wrapper.properties
+
+# Local automation state
+.auralis_git_checkpoint_state.ini
