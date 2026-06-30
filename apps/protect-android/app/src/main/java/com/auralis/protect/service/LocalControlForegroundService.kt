@@ -55,12 +55,6 @@ class LocalControlForegroundService : Service() {
     }
 
     override fun onDestroy() {
-        CommandEngine.execute(
-            context = applicationContext,
-            source = CommandSource.SYSTEM,
-            command = AuralisCommand.RING_STOP,
-            logEvent = false
-        )
         stopLocalControl()
         super.onDestroy()
     }
@@ -101,8 +95,15 @@ class LocalControlForegroundService : Service() {
                     text = "http://$ip:${LocalControlStore.PORT}"
                 )
 
+                var lastHeartbeatAt = 0L
                 while (running) {
                     try {
+                        val now = System.currentTimeMillis()
+                        if (now - lastHeartbeatAt >= HEARTBEAT_INTERVAL_MS) {
+                            LocalControlStore.markHeartbeat(applicationContext)
+                            lastHeartbeatAt = now
+                        }
+
                         val client = serverSocket?.accept()
                         if (client != null) {
                             handleClient(client)
@@ -112,6 +113,8 @@ class LocalControlForegroundService : Service() {
                     }
                 }
             } catch (error: Exception) {
+                if (!running) return@Thread
+
                 val detail = error.message ?: "Local command panel failed"
 
                 LocalControlStore.saveStatus(
@@ -862,6 +865,7 @@ class LocalControlForegroundService : Service() {
 
         private const val CHANNEL_ID = "auralis_local_control_channel"
         private const val NOTIFICATION_ID = 4730
+        private const val HEARTBEAT_INTERVAL_MS = 5_000L
     }
 }
 

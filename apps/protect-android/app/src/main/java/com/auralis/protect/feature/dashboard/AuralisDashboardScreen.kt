@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,18 +23,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.auralis.protect.core.permissions.NotificationPermission
 import com.auralis.protect.core.permissions.SmsPermission
-import com.auralis.protect.data.audio.RingStateStore
 import com.auralis.protect.data.battery.BatteryReader
 import com.auralis.protect.data.localcontrol.LocalControlStore
 import com.auralis.protect.data.location.LocationReader
-import com.auralis.protect.data.location.LocationStore
 import com.auralis.protect.data.logs.EventLogStore
 import com.auralis.protect.data.network.DeviceAddressReader
 import com.auralis.protect.data.network.NetworkReader
+import com.auralis.protect.data.recovery.RecoveryStateStore
 import com.auralis.protect.data.settings.TrustedSenderStore
 import com.auralis.protect.data.sms.SmsCommandStore
 import com.auralis.protect.design.theme.AuralisColors
 import com.auralis.protect.domain.model.CommandChannelDefaults
+import com.auralis.protect.domain.usecase.CommandEngine
 import com.auralis.protect.feature.dashboard.components.AdvancedToolsPanel
 import com.auralis.protect.feature.dashboard.components.DashboardTab
 import com.auralis.protect.feature.dashboard.components.DashboardTabs
@@ -62,10 +61,11 @@ fun AuralisDashboardScreen(
     onStopRing: () -> Unit
 ) {
     val context = LocalContext.current
+    val initialRuntimeState = remember { RecoveryStateStore.read(context) }
 
     var selectedTab by remember { mutableStateOf(DashboardTab.Controls) }
-    var recoveryActive by remember { mutableStateOf(LocationStore.isRecoveryActive(context)) }
-    var ringActive by remember { mutableStateOf(RingStateStore.isActive(context)) }
+    var recoveryActive by remember { mutableStateOf(initialRuntimeState.recoveryActive) }
+    var ringActive by remember { mutableStateOf(initialRuntimeState.ringActive) }
     var batteryPercent by remember { mutableIntStateOf(BatteryReader.readBatteryPercent(context)) }
     var networkStatus by remember { mutableStateOf(NetworkReader.read(context)) }
     var locationSnapshot by remember { mutableStateOf(LocationReader.readLastKnownLocation(context)) }
@@ -82,11 +82,14 @@ fun AuralisDashboardScreen(
     var eventLogs by remember { mutableStateOf(EventLogStore.readEvents(context)) }
 
     fun refreshDashboardState() {
+        CommandEngine.reconcileRuntimeState(context)
+        val runtimeState = RecoveryStateStore.read(context)
+
         batteryPercent = BatteryReader.readBatteryPercent(context)
         networkStatus = NetworkReader.read(context)
         locationSnapshot = LocationReader.readLastKnownLocation(context)
-        recoveryActive = LocationStore.isRecoveryActive(context)
-        ringActive = RingStateStore.isActive(context)
+        recoveryActive = runtimeState.recoveryActive
+        ringActive = runtimeState.ringActive
         notificationsAllowed = NotificationPermission.isGranted(context)
         smsReceiveGranted = SmsPermission.canReceive(context)
         smsSendGranted = SmsPermission.canSend(context)
@@ -130,8 +133,6 @@ fun AuralisDashboardScreen(
             delay(1000)
         }
     }
-
-    DisposableEffect(Unit) { onDispose { onStopRing() } }
 
     val smsReady = smsReceiveGranted && smsSendGranted && TrustedSenderStore.hasTrustedSender(context)
     val channelStatuses = CommandChannelDefaults.statuses(

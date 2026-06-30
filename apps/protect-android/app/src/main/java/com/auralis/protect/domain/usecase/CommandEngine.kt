@@ -55,12 +55,43 @@ object CommandEngine {
         return result
     }
 
+    fun reconcileRuntimeState(context: Context) {
+        val state = RecoveryStateStore.read(context)
+        val ringStoreActive = RingStateStore.isActive(context)
+        val ringtonePlaying = activeRingtone?.isPlaying == true
+
+        when {
+            ringtonePlaying && (!state.ringActive || !ringStoreActive) -> {
+                RingStateStore.setActive(context, true)
+                RecoveryStateStore.markRing(
+                    context = context,
+                    active = true,
+                    source = "SYSTEM",
+                    detail = "Ring state reconciled from active ringtone"
+                )
+            }
+
+            (state.ringActive || ringStoreActive) &&
+                !ringtonePlaying &&
+                !RingStateStore.isWithinStartGrace(context) -> {
+                RingStateStore.setActive(context, false)
+                RecoveryStateStore.markRing(
+                    context = context,
+                    active = false,
+                    source = "SYSTEM",
+                    detail = "Ring state cleared after app/service restart"
+                )
+            }
+        }
+    }
+
     fun statusText(context: Context): String {
+        reconcileRuntimeState(context)
         val battery = BatteryReader.readBatteryPercent(context)
         val network = NetworkReader.read(context)
         val location = LocationReader.readLastKnownLocation(context)
         val state = RecoveryStateStore.read(context)
-        val recovery = if (state.recoveryActive || LocationStore.isRecoveryActive(context)) "ON" else "OFF"
+        val recovery = if (state.recoveryActive) "ON" else "OFF"
         val ring = if (state.ringActive) "ON" else "OFF"
         val ip = DeviceAddressReader.primaryAddress()
 
@@ -78,11 +109,12 @@ object CommandEngine {
     }
 
     fun snapshotText(context: Context): String {
+        reconcileRuntimeState(context)
         val battery = BatteryReader.readBatteryPercent(context)
         val network = NetworkReader.read(context)
         val location = LocationReader.readLastKnownLocation(context)
         val state = RecoveryStateStore.read(context)
-        val recovery = if (state.recoveryActive || LocationStore.isRecoveryActive(context)) "ACTIVE" else "OFF"
+        val recovery = if (state.recoveryActive) "ACTIVE" else "OFF"
         val ring = if (state.ringActive) "ON" else "OFF"
         val ip = DeviceAddressReader.primaryAddress()
 

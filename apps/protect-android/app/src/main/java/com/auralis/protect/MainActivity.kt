@@ -118,7 +118,12 @@ class MainActivity : ComponentActivity() {
 
     private fun startLocalControlService() {
         try {
-            LocalControlStore.setActive(applicationContext, true)
+            LocalControlStore.saveStatus(
+                context = applicationContext,
+                active = false,
+                command = "PANEL STARTING",
+                detail = "Local Wi-Fi command panel is starting"
+            )
 
             val intent = Intent(this, LocalControlForegroundService::class.java).apply {
                 action = LocalControlForegroundService.ACTION_START
@@ -132,7 +137,12 @@ class MainActivity : ComponentActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         } catch (error: Exception) {
-            LocalControlStore.setActive(applicationContext, false)
+            LocalControlStore.saveStatus(
+                context = applicationContext,
+                active = false,
+                command = "PANEL FAILED",
+                detail = error.message ?: "Local control could not start"
+            )
 
             Toast.makeText(
                 this,
@@ -149,7 +159,12 @@ class MainActivity : ComponentActivity() {
             }
 
             startService(intent)
-            LocalControlStore.setActive(applicationContext, false)
+            LocalControlStore.saveStatus(
+                context = applicationContext,
+                active = false,
+                command = "PANEL STOPPED",
+                detail = "Local Wi-Fi command panel stopped"
+            )
 
             Toast.makeText(
                 this,
@@ -327,13 +342,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onDestroy() {
-        CommandEngine.execute(
-            context = applicationContext,
-            source = CommandSource.SYSTEM,
-            command = AuralisCommand.RING_STOP,
-            logEvent = false
-        )
-        super.onDestroy()
-    }
 }
