@@ -9,6 +9,7 @@ import android.net.Uri
 import androidx.core.content.ContextCompat
 import com.auralis.protect.data.audio.RingStateStore
 import com.auralis.protect.data.battery.BatteryReader
+import com.auralis.protect.data.evidence.EvidenceTimeline
 import com.auralis.protect.data.location.LocationReader
 import com.auralis.protect.data.location.LocationStore
 import com.auralis.protect.data.location.LocationTrailStore
@@ -20,9 +21,6 @@ import com.auralis.protect.domain.model.AuralisCommand
 import com.auralis.protect.domain.model.CommandResult
 import com.auralis.protect.domain.model.CommandSource
 import com.auralis.protect.service.RecoveryForegroundService
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 object CommandEngine {
     private var activeRingtone: Ringtone? = null
@@ -145,48 +143,7 @@ object CommandEngine {
     }
 
     fun evidenceReportText(context: Context): String {
-        val generatedAt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
-        val snapshot = snapshotText(context, trailSource = "REPORT")
-        val state = RecoveryStateStore.read(context)
-        val events = EventLogStore.readEvents(context).take(10)
-        val trailSummary = LocationTrailStore.summaryText(context)
-        val trailPoints = LocationTrailStore.recentPointsText(context)
-        val timeline = if (events.isEmpty()) {
-            "No command timeline entries recorded yet."
-        } else {
-            events.joinToString(separator = "\n") { entry ->
-                "${EventLogStore.ageText(entry)} | ${entry.channel} | ${entry.command} | ${entry.detail}"
-            }
-        }
-
-        return """
-            AURALIS EVIDENCE REPORT
-            Generated: $generatedAt
-
-            $snapshot
-
-            RECENT COMMAND TIMELINE
-            $timeline
-
-            STATE MEMORY
-            Last command: ${state.lastCommand}
-            Last source: ${state.lastSource}
-            Last detail: ${state.detail}
-            Last update: ${RecoveryStateStore.ageText(state)}
-
-            LOCATION TRAIL
-            $trailSummary
-
-            RECENT TRAIL POINTS
-            $trailPoints
-
-            VERIFIED COMMAND PATHS
-            SMS Boot: #AURALIS-BOOT-4729
-            SMS Stop: #AURALIS-STOP-4729
-            Local Status: /status?token=auralis-local-4729
-            Local Snapshot: /snapshot?token=auralis-local-4729
-            Local Report: /report?token=auralis-local-4729
-        """.trimIndent()
+        return EvidenceTimeline.reportText(context)
     }
 
     private fun mapUrl(latitude: Double?, longitude: Double?): String {

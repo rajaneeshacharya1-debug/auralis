@@ -1,5 +1,7 @@
 package com.auralis.protect.feature.dashboard
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.auralis.protect.core.permissions.NotificationPermission
 import com.auralis.protect.core.permissions.SmsPermission
 import com.auralis.protect.data.battery.BatteryReader
+import com.auralis.protect.data.evidence.EvidenceTimeline
 import com.auralis.protect.data.localcontrol.LocalControlStore
 import com.auralis.protect.data.location.LocationReader
 import com.auralis.protect.data.location.LocationTrailStore
@@ -71,6 +74,7 @@ fun AuralisDashboardScreen(
     var networkStatus by remember { mutableStateOf(NetworkReader.read(context)) }
     var locationSnapshot by remember { mutableStateOf(LocationReader.readLastKnownLocation(context)) }
     var trailPoints by remember { mutableStateOf(LocationTrailStore.readPoints(context)) }
+    var evidenceSnapshot by remember { mutableStateOf(EvidenceTimeline.snapshot(context)) }
     var notificationsAllowed by remember { mutableStateOf(NotificationPermission.isGranted(context)) }
     var smsReceiveGranted by remember { mutableStateOf(SmsPermission.canReceive(context)) }
     var smsSendGranted by remember { mutableStateOf(SmsPermission.canSend(context)) }
@@ -91,6 +95,7 @@ fun AuralisDashboardScreen(
         networkStatus = NetworkReader.read(context)
         locationSnapshot = LocationReader.readLastKnownLocation(context)
         trailPoints = LocationTrailStore.readPoints(context)
+        evidenceSnapshot = EvidenceTimeline.snapshot(context)
         recoveryActive = runtimeState.recoveryActive
         ringActive = runtimeState.ringActive
         notificationsAllowed = NotificationPermission.isGranted(context)
@@ -110,6 +115,25 @@ fun AuralisDashboardScreen(
         recoveryActive = true
         onStartRecoveryService()
         refreshDashboardState()
+    }
+
+    fun copyEvidenceReport() {
+        val report = CommandEngine.evidenceReportText(context)
+        val clipboard = context.getSystemService(ClipboardManager::class.java)
+        clipboard.setPrimaryClip(
+            ClipData.newPlainText(
+                "Auralis evidence report",
+                report
+            )
+        )
+        EventLogStore.append(
+            context = context,
+            channel = "SHARE",
+            command = "EVIDENCE COPIED",
+            detail = "Evidence report copied to clipboard"
+        )
+        evidenceSnapshot = EvidenceTimeline.snapshot(context)
+        eventLogs = EventLogStore.readEvents(context)
     }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -270,6 +294,7 @@ fun AuralisDashboardScreen(
                             } else {
                                 locationSnapshot = LocationReader.refreshNow(context, trailSource = "MANUAL_REFRESH")
                                 trailPoints = LocationTrailStore.readPoints(context)
+                                evidenceSnapshot = EvidenceTimeline.snapshot(context)
                                 EventLogStore.append(
                                     context = context,
                                     channel = "MANUAL",
@@ -282,6 +307,7 @@ fun AuralisDashboardScreen(
                         onClearTrail = {
                             LocationTrailStore.clear(context)
                             trailPoints = LocationTrailStore.readPoints(context)
+                            evidenceSnapshot = EvidenceTimeline.snapshot(context)
                             eventLogs = EventLogStore.readEvents(context)
                         }
                     )
@@ -375,6 +401,8 @@ fun AuralisDashboardScreen(
                         locationSnapshot = locationSnapshot,
                         eventCount = eventLogs.size,
                         channels = channelStatuses,
+                        evidenceSnapshot = evidenceSnapshot,
+                        onCopyEvidenceReport = { copyEvidenceReport() },
                         onShareControllerLink = {
                             onShareControllerLink()
                             EventLogStore.append(
@@ -417,6 +445,7 @@ fun AuralisDashboardScreen(
                                 command = "EVIDENCE REPORT",
                                 detail = "Evidence timeline report share sheet opened"
                             )
+                            evidenceSnapshot = EvidenceTimeline.snapshot(context)
                             eventLogs = EventLogStore.readEvents(context)
                         }
                     )

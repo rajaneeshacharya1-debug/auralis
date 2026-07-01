@@ -13,7 +13,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.auralis.protect.data.evidence.EvidenceTimelineSnapshot
+import com.auralis.protect.data.localcontrol.LocalControlStore
 import com.auralis.protect.data.location.LocationSnapshot
+import com.auralis.protect.data.location.LocationTrailStore
+import com.auralis.protect.data.logs.EventLogStore
+import com.auralis.protect.data.recovery.RecoveryStateStore
+import com.auralis.protect.data.sms.SmsCommandStore
 import com.auralis.protect.design.components.AuralisActionButton
 import com.auralis.protect.design.components.AuralisButtonVariant
 import com.auralis.protect.design.theme.AuralisColors
@@ -32,6 +38,8 @@ fun AdvancedToolsPanel(
     locationSnapshot: LocationSnapshot,
     eventCount: Int,
     channels: List<CommandChannelStatus>,
+    evidenceSnapshot: EvidenceTimelineSnapshot,
+    onCopyEvidenceReport: () -> Unit,
     onShareControllerLink: () -> Unit,
     onShareLiveBeaconLink: () -> Unit,
     onShareRecoverySnapshot: () -> Unit,
@@ -142,18 +150,37 @@ fun AdvancedToolsPanel(
             SoftPanel {
                 SectionLabel("Evidence report")
                 Text(
-                    text = "$eventCount timeline events",
-                    color = if (eventCount > 0) AuralisColors.Success else AuralisColors.Warning,
+                    text = "${evidenceSnapshot.timeline.size} timeline entries",
+                    color = if (evidenceSnapshot.timeline.isNotEmpty()) AuralisColors.Success else AuralisColors.Warning,
                     fontWeight = FontWeight.Bold
                 )
-                AuralisActionButton(
-                    text = "Share evidence report",
-                    onClick = onShareEvidenceReport,
-                    variant = AuralisButtonVariant.Secondary,
-                    compact = true,
-                    modifier = Modifier.fillMaxWidth()
+                BodyText("Generate a local plain-text recovery evidence report. Nothing is uploaded unless you share it.")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    AuralisActionButton(
+                        text = "Generate + copy",
+                        onClick = onCopyEvidenceReport,
+                        variant = AuralisButtonVariant.Secondary,
+                        compact = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    AuralisActionButton(
+                        text = "Generate + share",
+                        onClick = onShareEvidenceReport,
+                        variant = AuralisButtonVariant.Secondary,
+                        compact = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                MicroText(
+                    text = "$eventCount event log entries available",
+                    color = AuralisColors.TextMuted
                 )
             }
+
+            EvidenceTimelineSection(evidenceSnapshot)
 
             SoftPanel {
                 SectionLabel("Channel diagnostics")
@@ -191,6 +218,66 @@ fun AdvancedToolsPanel(
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EvidenceTimelineSection(snapshot: EvidenceTimelineSnapshot) {
+    SoftPanel {
+        SectionLabel("Evidence timeline")
+        Text(
+            text = "Generated ${snapshot.generatedAt}",
+            color = AuralisColors.TextPrimary,
+            fontWeight = FontWeight.Bold
+        )
+        MicroText(
+            text = "Recovery ${if (snapshot.recoveryState.recoveryActive) "active" else "inactive"} - Ring ${if (snapshot.ringActive) "active" else "off"} - Local ${if (snapshot.localControlStatus.active) "online" else "offline"}",
+            color = AuralisColors.CyanSoft
+        )
+        MicroText(
+            text = "State: ${snapshot.recoveryState.lastCommand} - ${RecoveryStateStore.ageText(snapshot.recoveryState)}",
+            color = AuralisColors.TextMuted
+        )
+        MicroText(
+            text = "Local: ${snapshot.localControlStatus.lastCommand} - ${LocalControlStore.ageText(snapshot.localControlStatus)}",
+            color = AuralisColors.TextMuted
+        )
+        MicroText(
+            text = "SMS: ${snapshot.smsStatus.lastCommand} - ${SmsCommandStore.ageText(snapshot.smsStatus)} - sender ${snapshot.trustedSenderMasked}",
+            color = AuralisColors.TextMuted
+        )
+
+        DividerLine()
+
+        SectionLabel("Recent trail points")
+        if (snapshot.trailPoints.isEmpty()) {
+            MicroText(
+                text = "No local recovery trail points yet.",
+                color = AuralisColors.TextMuted
+            )
+        } else {
+            snapshot.trailPoints.take(3).forEach { point ->
+                MicroText(
+                    text = "${LocationTrailStore.ageText(point.timestamp)} - ${point.source} - ${LocationTrailStore.formatPoint(point)}",
+                    color = AuralisColors.TextSecondary
+                )
+            }
+        }
+
+        SectionLabel("Recent events")
+        if (snapshot.eventLogs.isEmpty()) {
+            MicroText(
+                text = "No event log entries yet.",
+                color = AuralisColors.TextMuted
+            )
+        } else {
+            snapshot.eventLogs.take(3).forEach { entry ->
+                MicroText(
+                    text = "${EventLogStore.ageText(entry)} - ${entry.channel} - ${entry.command}",
+                    color = AuralisColors.TextSecondary
+                )
             }
         }
     }
