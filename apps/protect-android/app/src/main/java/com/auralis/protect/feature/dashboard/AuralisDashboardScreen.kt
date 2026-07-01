@@ -26,6 +26,7 @@ import com.auralis.protect.core.permissions.SmsPermission
 import com.auralis.protect.data.battery.BatteryReader
 import com.auralis.protect.data.localcontrol.LocalControlStore
 import com.auralis.protect.data.location.LocationReader
+import com.auralis.protect.data.location.LocationTrailStore
 import com.auralis.protect.data.logs.EventLogStore
 import com.auralis.protect.data.network.DeviceAddressReader
 import com.auralis.protect.data.network.NetworkReader
@@ -69,6 +70,7 @@ fun AuralisDashboardScreen(
     var batteryPercent by remember { mutableIntStateOf(BatteryReader.readBatteryPercent(context)) }
     var networkStatus by remember { mutableStateOf(NetworkReader.read(context)) }
     var locationSnapshot by remember { mutableStateOf(LocationReader.readLastKnownLocation(context)) }
+    var trailPoints by remember { mutableStateOf(LocationTrailStore.readPoints(context)) }
     var notificationsAllowed by remember { mutableStateOf(NotificationPermission.isGranted(context)) }
     var smsReceiveGranted by remember { mutableStateOf(SmsPermission.canReceive(context)) }
     var smsSendGranted by remember { mutableStateOf(SmsPermission.canSend(context)) }
@@ -88,6 +90,7 @@ fun AuralisDashboardScreen(
         batteryPercent = BatteryReader.readBatteryPercent(context)
         networkStatus = NetworkReader.read(context)
         locationSnapshot = LocationReader.readLastKnownLocation(context)
+        trailPoints = LocationTrailStore.readPoints(context)
         recoveryActive = runtimeState.recoveryActive
         ringActive = runtimeState.ringActive
         notificationsAllowed = NotificationPermission.isGranted(context)
@@ -111,7 +114,10 @@ fun AuralisDashboardScreen(
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { locationSnapshot = LocationReader.readLastKnownLocation(context) }
+    ) {
+        locationSnapshot = LocationReader.readLastKnownLocation(context)
+        trailPoints = LocationTrailStore.readPoints(context)
+    }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -244,6 +250,7 @@ fun AuralisDashboardScreen(
                         recoveryActive = recoveryActive,
                         ringActive = ringActive,
                         locationSnapshot = locationSnapshot,
+                        trailPoints = trailPoints,
                         onRequestPermission = {
                             locationPermissionLauncher.launch(
                                 arrayOf(
@@ -261,7 +268,8 @@ fun AuralisDashboardScreen(
                                     )
                                 )
                             } else {
-                                locationSnapshot = LocationReader.readLastKnownLocation(context)
+                                locationSnapshot = LocationReader.refreshNow(context, trailSource = "MANUAL_REFRESH")
+                                trailPoints = LocationTrailStore.readPoints(context)
                                 EventLogStore.append(
                                     context = context,
                                     channel = "MANUAL",
@@ -270,6 +278,11 @@ fun AuralisDashboardScreen(
                                 )
                                 eventLogs = EventLogStore.readEvents(context)
                             }
+                        },
+                        onClearTrail = {
+                            LocationTrailStore.clear(context)
+                            trailPoints = LocationTrailStore.readPoints(context)
+                            eventLogs = EventLogStore.readEvents(context)
                         }
                     )
                 }
@@ -383,7 +396,8 @@ fun AuralisDashboardScreen(
                             eventLogs = EventLogStore.readEvents(context)
                         },
                         onShareRecoverySnapshot = {
-                            locationSnapshot = LocationReader.readLastKnownLocation(context)
+                            locationSnapshot = LocationReader.readLastKnownLocation(context, trailSource = "SNAPSHOT")
+                            trailPoints = LocationTrailStore.readPoints(context)
                             onShareRecoverySnapshot()
                             EventLogStore.append(
                                 context = context,
@@ -394,7 +408,8 @@ fun AuralisDashboardScreen(
                             eventLogs = EventLogStore.readEvents(context)
                         },
                         onShareEvidenceReport = {
-                            locationSnapshot = LocationReader.readLastKnownLocation(context)
+                            locationSnapshot = LocationReader.readLastKnownLocation(context, trailSource = "REPORT")
+                            trailPoints = LocationTrailStore.readPoints(context)
                             onShareEvidenceReport()
                             EventLogStore.append(
                                 context = context,

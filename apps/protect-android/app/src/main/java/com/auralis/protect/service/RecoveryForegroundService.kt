@@ -15,6 +15,7 @@ import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.auralis.protect.data.location.LocationReader
 import com.auralis.protect.data.location.LocationStore
+import com.auralis.protect.data.location.LocationTrailStore
 import com.auralis.protect.data.recovery.RecoveryStateStore
 
 class RecoveryForegroundService : Service() {
@@ -22,6 +23,11 @@ class RecoveryForegroundService : Service() {
 
     private val locationListener = LocationListener { location: Location ->
         LocationStore.saveLatestLocation(applicationContext, location)
+        LocationTrailStore.recordIfRecoveryActive(
+            context = applicationContext,
+            location = location,
+            source = "RECOVERY_SERVICE"
+        )
         RecoveryStateStore.markHeartbeat(
             context = applicationContext,
             detail = "Fresh location fix saved by recovery service"
@@ -127,6 +133,11 @@ class RecoveryForegroundService : Service() {
     private fun publishBestKnownLocation(manager: LocationManager) {
         val best = LocationReader.bestLastKnownLocation(manager) ?: return
         LocationStore.saveLatestLocation(applicationContext, best)
+        LocationTrailStore.recordIfRecoveryActive(
+            context = applicationContext,
+            location = best,
+            source = "RECOVERY_START"
+        )
         RecoveryStateStore.markHeartbeat(
             context = applicationContext,
             detail = "Best available location published when recovery started"

@@ -11,6 +11,7 @@ import com.auralis.protect.data.audio.RingStateStore
 import com.auralis.protect.data.battery.BatteryReader
 import com.auralis.protect.data.location.LocationReader
 import com.auralis.protect.data.location.LocationStore
+import com.auralis.protect.data.location.LocationTrailStore
 import com.auralis.protect.data.logs.EventLogStore
 import com.auralis.protect.data.network.DeviceAddressReader
 import com.auralis.protect.data.network.NetworkReader
@@ -85,15 +86,19 @@ object CommandEngine {
         }
     }
 
-    fun statusText(context: Context): String {
+    fun statusText(
+        context: Context,
+        trailSource: String = "RECOVERY_STATUS"
+    ): String {
         reconcileRuntimeState(context)
         val battery = BatteryReader.readBatteryPercent(context)
         val network = NetworkReader.read(context)
-        val location = LocationReader.readLastKnownLocation(context)
+        val location = LocationReader.readLastKnownLocation(context, trailSource = trailSource)
         val state = RecoveryStateStore.read(context)
         val recovery = if (state.recoveryActive) "ON" else "OFF"
         val ring = if (state.ringActive) "ON" else "OFF"
         val ip = DeviceAddressReader.primaryAddress()
+        val trailSummary = LocationTrailStore.summaryText(context)
 
         return """
             AURALIS STATUS
@@ -105,18 +110,23 @@ object CommandEngine {
             Network: ${network.value} - ${network.detail}
             Location: ${location.value} - ${location.detail}
             Maps: ${mapUrl(location.latitude, location.longitude)}
+            $trailSummary
         """.trimIndent()
     }
 
-    fun snapshotText(context: Context): String {
+    fun snapshotText(
+        context: Context,
+        trailSource: String = "SNAPSHOT"
+    ): String {
         reconcileRuntimeState(context)
         val battery = BatteryReader.readBatteryPercent(context)
         val network = NetworkReader.read(context)
-        val location = LocationReader.readLastKnownLocation(context)
+        val location = LocationReader.readLastKnownLocation(context, trailSource = trailSource)
         val state = RecoveryStateStore.read(context)
         val recovery = if (state.recoveryActive) "ACTIVE" else "OFF"
         val ring = if (state.ringActive) "ON" else "OFF"
         val ip = DeviceAddressReader.primaryAddress()
+        val trailSummary = LocationTrailStore.summaryText(context)
 
         return """
             AURALIS RECOVERY SNAPSHOT
@@ -130,14 +140,17 @@ object CommandEngine {
             Maps: ${mapUrl(location.latitude, location.longitude)}
             Local IP: $ip
             State memory: ${state.lastCommand} - ${RecoveryStateStore.ageText(state)}
+            $trailSummary
         """.trimIndent()
     }
 
     fun evidenceReportText(context: Context): String {
         val generatedAt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
-        val snapshot = snapshotText(context)
+        val snapshot = snapshotText(context, trailSource = "REPORT")
         val state = RecoveryStateStore.read(context)
         val events = EventLogStore.readEvents(context).take(10)
+        val trailSummary = LocationTrailStore.summaryText(context)
+        val trailPoints = LocationTrailStore.recentPointsText(context)
         val timeline = if (events.isEmpty()) {
             "No command timeline entries recorded yet."
         } else {
@@ -160,6 +173,12 @@ object CommandEngine {
             Last source: ${state.lastSource}
             Last detail: ${state.detail}
             Last update: ${RecoveryStateStore.ageText(state)}
+
+            LOCATION TRAIL
+            $trailSummary
+
+            RECENT TRAIL POINTS
+            $trailPoints
 
             VERIFIED COMMAND PATHS
             SMS Boot: #AURALIS-BOOT-4729
@@ -367,7 +386,7 @@ object CommandEngine {
             success = true,
             command = AuralisCommand.STATUS,
             source = source,
-            publicMessage = statusText(context),
+            publicMessage = statusText(context, trailSource = "${source.label}_STATUS"),
             detail = "Status requested through ${source.label}"
         )
     }
@@ -380,7 +399,7 @@ object CommandEngine {
             success = true,
             command = AuralisCommand.SNAPSHOT,
             source = source,
-            publicMessage = snapshotText(context),
+            publicMessage = snapshotText(context, trailSource = "SNAPSHOT"),
             detail = "Recovery snapshot generated through ${source.label}"
         )
     }

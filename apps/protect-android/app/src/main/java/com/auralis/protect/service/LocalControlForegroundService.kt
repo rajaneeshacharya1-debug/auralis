@@ -348,8 +348,8 @@ class LocalControlForegroundService : Service() {
     private fun buildLiveBeaconHtml(token: String): String {
         val ip = DeviceAddressReader.primaryAddress()
         val encodedToken = Uri.encode(token)
-        val status = htmlEscape(CommandEngine.statusText(applicationContext))
-        val snapshot = htmlEscape(CommandEngine.snapshotText(applicationContext))
+        val status = htmlEscape(CommandEngine.statusText(applicationContext, trailSource = "LOCAL_STATUS"))
+        val snapshot = htmlEscape(CommandEngine.snapshotText(applicationContext, trailSource = "SNAPSHOT"))
         val report = htmlEscape(CommandEngine.evidenceReportText(applicationContext))
         val baseAddress = "http://$ip:${LocalControlStore.PORT}"
 
@@ -506,7 +506,7 @@ class LocalControlForegroundService : Service() {
         val ip = DeviceAddressReader.primaryAddress()
         val currentToken = LocalControlStore.readToken(applicationContext)
         val initialStatus = if (initialToken == currentToken) {
-            CommandEngine.statusText(applicationContext)
+            CommandEngine.statusText(applicationContext, trailSource = "LOCAL_STATUS")
         } else {
             "Enter the local control token, then press Refresh Status."
         }

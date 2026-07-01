@@ -85,7 +85,10 @@ object LocationReader {
         return fine || coarse
     }
 
-    fun readLastKnownLocation(context: Context): LocationSnapshot {
+    fun readLastKnownLocation(
+        context: Context,
+        trailSource: String = "RECOVERY_STATUS"
+    ): LocationSnapshot {
         if (!hasLocationPermission(context)) {
             return LocationSnapshot(
                 value = "Permission",
@@ -98,10 +101,19 @@ object LocationReader {
         }
 
         if (LocationStore.isRecoveryActive(context)) {
-            publishBestAvailableLocation(context, providerOverride = "dashboard")
+            publishBestAvailableLocation(
+                context = context,
+                providerOverride = "dashboard",
+                trailSource = trailSource
+            )
         }
 
         LocationStore.readLatestLocation(context)?.let { liveSnapshot ->
+            LocationTrailStore.recordIfRecoveryActive(
+                context = context,
+                snapshot = liveSnapshot,
+                source = trailSource
+            )
             return liveSnapshot
         }
 
@@ -113,6 +125,11 @@ object LocationReader {
                 context = context,
                 location = bestLocation,
                 providerOverride = bestLocation.provider ?: "last-known"
+            )
+            LocationTrailStore.recordIfRecoveryActive(
+                context = context,
+                location = bestLocation,
+                source = trailSource
             )
 
             LocationStore.readLatestLocation(context) ?: snapshotFromLocation(bestLocation)
@@ -128,23 +145,31 @@ object LocationReader {
         }
     }
 
-    fun refreshNow(context: Context): LocationSnapshot {
+    fun refreshNow(
+        context: Context,
+        trailSource: String = "MANUAL_REFRESH"
+    ): LocationSnapshot {
         if (!hasLocationPermission(context)) {
-            return readLastKnownLocation(context)
+            return readLastKnownLocation(context, trailSource = trailSource)
         }
 
-        val saved = publishBestAvailableLocation(context, providerOverride = "manual refresh")
+        val saved = publishBestAvailableLocation(
+            context = context,
+            providerOverride = "manual refresh",
+            trailSource = trailSource
+        )
         if (saved) {
-            return LocationStore.readLatestLocation(context) ?: readLastKnownLocation(context)
+            return LocationStore.readLatestLocation(context) ?: readLastKnownLocation(context, trailSource = trailSource)
         }
 
-        requestSingleProviderUpdate(context)
-        return readLastKnownLocation(context)
+        requestSingleProviderUpdate(context, trailSource = trailSource)
+        return readLastKnownLocation(context, trailSource = trailSource)
     }
 
     fun publishBestAvailableLocation(
         context: Context,
-        providerOverride: String? = null
+        providerOverride: String? = null,
+        trailSource: String = "RECOVERY_STATUS"
     ): Boolean {
         if (!hasLocationPermission(context)) return false
 
@@ -155,10 +180,18 @@ object LocationReader {
             location = bestLocation,
             providerOverride = providerOverride ?: bestLocation.provider ?: "provider"
         )
+        LocationTrailStore.recordIfRecoveryActive(
+            context = context,
+            location = bestLocation,
+            source = trailSource
+        )
         return true
     }
 
-    fun requestSingleProviderUpdate(context: Context) {
+    fun requestSingleProviderUpdate(
+        context: Context,
+        trailSource: String = "RECOVERY_STATUS"
+    ) {
         if (!hasLocationPermission(context)) return
 
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -172,6 +205,11 @@ object LocationReader {
                                 context = context.applicationContext,
                                 location = location,
                                 providerOverride = location.provider ?: "single update"
+                            )
+                            LocationTrailStore.recordIfRecoveryActive(
+                                context = context.applicationContext,
+                                location = location,
+                                source = trailSource
                             )
                             try {
                                 locationManager.removeUpdates(this)

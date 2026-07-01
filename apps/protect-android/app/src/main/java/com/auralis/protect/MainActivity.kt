@@ -287,7 +287,7 @@ class MainActivity : ComponentActivity() {
 
     private fun shareRecoverySnapshot() {
         val snapshot = CommandEngine.snapshotText(applicationContext)
-        val location = LocationReader.readLastKnownLocation(applicationContext)
+        val location = LocationReader.readLastKnownLocation(applicationContext, trailSource = "SNAPSHOT")
         val body = buildString {
             append(snapshot)
             if (location.mapsUrl != null) {
